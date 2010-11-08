@@ -30,11 +30,30 @@ App.process = function (socket) {
 };
 
 App.gotStats = function(socket, data) {
-    socket.write(data);
+    var o;
+    o = App.calculate(data);
+    socket.write(o);
     socket.end();
     return true;
 };
 
+App.calculate = function(data) {
+    var d, i, ii, s, fields, thisStat, cpu;
+    d = data.split("\n");
+    for (i = 0, ii = d.length; i < ii; i++) {
+	s = d[i];
+	if (s.substr(0, 3) === 'cpu') {
+	    fields = s.split(/\s+/g);
+	    cpu = fields.splice(0, 1);
+	    thisStat = App.getStat(fields);
+	}
+    }
+    return d[0];
+};
+
+App.getStat = function(fields) {
+
+};
 
 net.createServer(App.main).listen(8124, "127.0.0.1");
 
