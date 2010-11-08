@@ -9,15 +9,48 @@
  *
  */
 
+
 var net = require('net');
 var fs = require('fs');
 
-var App = {};
 
+var App = {};
 App.prevTotal = {};
 App.prevIdle = {};
 
-App.main = function (socket) {
+App.main = function(args) {
+    var port, host;
+    if (args[2] === '--help') {
+	console.log('Usage: health.js [IP, [PORT]]');
+	return 1;
+    }
+    else {
+	host = args[2];
+	port = args[3];
+    }
+    if (host === undefined) {
+	host = '127.0.0.1';
+    }
+    else if (!net.isIP(host)) {
+	console.log('You must supply a valid IP.');
+	return 1;
+    }
+    if (port === undefined) {
+	port = 37778;
+    }
+    else if (isNaN(port)) {
+	console.log('Port is invalid.');
+	return 1;
+    }
+    else {
+	port = parseInt(port);
+    }
+    console.log("Listening on", host, "port", port);
+    net.createServer(App.connected).listen(port, host);
+    return 0;
+};
+
+App.connected = function (socket) {
     socket.setEncoding("utf8");
     setInterval(function() {
 	App.process(socket);
@@ -126,7 +159,4 @@ App.calculate = function(cpuIndex, fields, prevIdle, prevTotal) {
     return out;
 };
 
-
-
-net.createServer(App.main).listen(8124, "127.0.0.1");
-
+App.main(process.argv);
