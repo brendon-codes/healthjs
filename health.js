@@ -51,9 +51,17 @@ App.main = function(args) {
 };
 
 App.connected = function (socket) {
+    var timer;
     socket.setEncoding("utf8");
-    setInterval(function() {
-	App.process(socket);
+    timer = setInterval(function() {
+	if (socket.readyState === 'open') {
+	    App.process(socket);
+	    return true;
+	}
+	else {
+	    clearInterval(timer);
+	    return false;
+        }
     }, 1000);
     return true;
 };
