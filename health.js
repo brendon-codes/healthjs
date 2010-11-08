@@ -3,7 +3,9 @@
 /**
  * Network service for calculating CPU of remote machine.
  * Another project by Last.VC <http://last.vc>
+ *
  * Tested on Node.js 0.2.3 and 0.2.4
+ * This will only run on Linux. OSX and BSD are not supported
  *
  * @author Brendon Crawford
  * @note Some concepts taken from http://colby.id.au/node/39
