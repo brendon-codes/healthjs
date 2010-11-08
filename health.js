@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * Network service for calculating CPU of remote machine.
  * Another project by Last.VC <http://last.vc>
@@ -28,6 +26,9 @@
  *
  */
 
+/*jslint white: true, devel: true, rhino: true, onevar: true, undef: true, nomen: true, eqeqeq: true, plusplus: false, bitwise: true, regexp: true, newcap: true, immed: true, maxlen: 80 */
+/*global require, setInterval, clearInterval, process */
+"use strict";
 
 var net = require('net');
 var fs = require('fs');
@@ -43,7 +44,7 @@ App.prevIdle = {};
  * @param {Array} args
  * @return {Int}
  */
-App.main = function(args) {
+App.main = function (args) {
     var port, host;
     if (args[2] === '--help') {
         console.log('Usage: health.js [IP, [PORT]]');
@@ -61,14 +62,14 @@ App.main = function(args) {
     //  return 1;
     //}
     if (port === undefined) {
-       port = 37778;
+        port = 37778;
     }
     else if (isNaN(port)) {
         console.log('Port is invalid.');
         return 1;
     }
     else {
-        port = parseInt(port);
+        port = parseInt(port, 10);
     }
     console.log("Listening on", host, "port", port);
     net.createServer(App.connected).listen(port, host);
@@ -84,7 +85,7 @@ App.main = function(args) {
 App.connected = function (socket) {
     var timer;
     socket.setEncoding("utf8");
-    socket.on('data', function(msg) {
+    socket.on('data', function (msg) {
         var command;
         command = App.getCommand(msg);
         socket.removeAllListeners('data');
@@ -134,9 +135,9 @@ App.getCommand = function (msg) {
  * @param {Stream} socket
  * @return {Bool}
  */
-App.loop = function(socket) {
+App.loop = function (socket) {
     var timer;
-    timer = setInterval(function() {
+    timer = setInterval(function () {
         if (socket.readyState === 'open') {
             App.process(socket, false);
             return true;
@@ -164,11 +165,11 @@ App.process = function (socket, closeIt) {
         'flags' : 'r',
         'encoding' : 'ascii'
     });
-    r.addListener('data', function(data) {
+    r.addListener('data', function (data) {
         fData += data;
         return true;
     });
-    r.addListener('end', function() {
+    r.addListener('end', function () {
         App.gotStats(socket, fData, closeIt);
         return true;
     });
@@ -183,7 +184,7 @@ App.process = function (socket, closeIt) {
  * @param {Bool} closeIt
  * @return {Bool}
  */
-App.gotStats = function(socket, data, closeIt) {
+App.gotStats = function (socket, data, closeIt) {
     var allStats, o;
     allStats = App.build(data);
     o = App.output(allStats);
@@ -201,7 +202,7 @@ App.gotStats = function(socket, data, closeIt) {
  * @return {String}
  */
 App.output = function (allStats) {
-    var o;
+    var o, i, ii, s;
     o = "";
     for (i = 0, ii = allStats.length; i < ii; i++) {
         s = allStats[i];
@@ -220,8 +221,8 @@ App.output = function (allStats) {
  * @param {String} data
  * @return {Array} 
  */
-App.build = function(data) {
-    var d, i, ii, s, fields, thisStat, cpu, cpuIdent, allStats;
+App.build = function (data) {
+    var d, i, ii, s, fields, thisStat, cpu, cpuIdent, allStats, cpuIndex;
     d = data.split("\n");
     allStats = [];
     for (i = 0, ii = d.length; i < ii; i++) {
@@ -235,7 +236,7 @@ App.build = function(data) {
                 cpuIndex = -1;
             }
             else if (!isNaN(cpuIdent)) {
-                cpuIndex = parseInt(cpuIdent);
+                cpuIndex = parseInt(cpuIdent, 10);
             }
             if (cpuIndex !== null) {
                 thisStat = App.getStatRow(cpuIndex, fields);
@@ -256,7 +257,7 @@ App.build = function(data) {
  * @param {Array} fields
  * @return {Float}
  */
-App.getStatRow = function(cpuIndex, fields) {
+App.getStatRow = function (cpuIndex, fields) {
     var calc, diffUsage;
     if (App.prevTotal[cpuIndex] === undefined) {
         App.prevTotal[cpuIndex] = 0;
@@ -282,16 +283,16 @@ App.getStatRow = function(cpuIndex, fields) {
  * @param {Int} prevTotal
  * @return {Array}
  */
-App.calculate = function(cpuIndex, fields, prevIdle, prevTotal) {
-    var idle, total, diffIdle, diffTotal;
+App.calculate = function (cpuIndex, fields, prevIdle, prevTotal) {
+    var idle, total, diffIdle, diffTotal, diffUsage, out;
     idle = fields[3];
     total = fields.reduce(function (p, c) {
-       return (parseInt(p) + parseInt(c));
+        return (parseInt(p, 10) + parseInt(c, 10));
     });
     diffIdle = idle - prevIdle;
     diffTotal = total - prevTotal;
     if (diffTotal === 0) {
-       diffUsage = 0.0;
+        diffUsage = 0.0;
     }
     else {
         diffUsage = (((diffTotal - diffIdle) / diffTotal) * 100);
