@@ -5,6 +5,9 @@ var fs = require('fs');
 
 var App = {};
 
+App.prevTotal = {};
+App.prevIdle = {};
+
 App.main = function (socket) {
     socket.setEncoding("utf8");
     App.process(socket);
@@ -31,29 +34,64 @@ App.process = function (socket) {
 
 App.gotStats = function(socket, data) {
     var o;
-    o = App.calculate(data);
+    o = App.build(data);
     socket.write(o);
     socket.end();
     return true;
 };
 
-App.calculate = function(data) {
-    var d, i, ii, s, fields, thisStat, cpu;
+App.build = function(data) {
+    var d, i, ii, s, fields, thisStat, cpu, cpuIdent;
     d = data.split("\n");
     for (i = 0, ii = d.length; i < ii; i++) {
 	s = d[i];
 	if (s.substr(0, 3) === 'cpu') {
 	    fields = s.split(/\s+/g);
 	    cpu = fields.splice(0, 1);
-	    thisStat = App.getStat(fields);
+	    cpuIdent = cpu.charAt(3);
+	    cpuIndex = null;
+	    if (cpuIdent === '') {
+		cpuIndex = 0;
+	    }
+	    else if (!isNaN(cpuIdent)) {
+		cpuIndex = parseInt(cpuIdent);
+	    }
+	    if (cpuIndex !== null) {
+		thisStat = App.getStat(cpuIndex, fields);
+	    }
 	}
     }
     return d[0];
 };
 
-App.getStat = function(fields) {
-
+App.getStatRow = function(cpuIndex, fields) {
+    var calc, diffUsage;
+    if (App.prevTotal[cpuIndex] === undefined) {
+	App.prevTotal[cpuIndex] = 0;
+    }
+    if (App.prevIdle[cpuIndex] === undefined) {
+	App.prevIdle[cpuIndex] = 0;
+    }
+    calc = App.calculate(cpuIndex, fields,
+			App.prevIdle[cpuIndex], App.prevTotal[cpuIndex]);
+    diffUsage = calc[0];
+    App.prevIdle[cpuIndex] = calc[1];
+    App.prevTotal[cpuIndex] = calc[2];
+    return diffUsage;
 };
+
+App.calculate = function(fields, prevIdle, prevTotal) {
+    var idle, total, diffIdle, prevTotal;
+    idle = fields[4];
+    total = fields.reduce(function (p, c) { return (p + c); });
+    diffIdle = idle - prevIdle;
+    diffTotal = total - prevTotal;
+    diffUsage = ((((1000 * (diffTotal - diffIdle)) / diffTotal) + 5) / 10);
+    out = [diffUsage, prevIdle, prevTotal];
+    return out;
+};
+
+
 
 net.createServer(App.main).listen(8124, "127.0.0.1");
 
