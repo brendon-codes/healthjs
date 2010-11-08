@@ -53,20 +53,61 @@ App.main = function(args) {
 App.connected = function (socket) {
     var timer;
     socket.setEncoding("utf8");
+    socket.on('data', function(msg) {
+	var command;
+	command = App.getCommand(msg);
+	socket.removeAllListeners('data');
+	if (command === 1) {
+	    App.process(socket, true);
+	}
+	else if (command === 2) {
+	    App.loop(socket);
+	}
+	return true;
+    });
+    return true;
+};
+
+App.getCommand = function (msg) {
+    var out, t, p;
+    p = msg.replace(/^\s+|\s+$/g, '').split(/\s+/g);
+    out = 0;
+    if (p.length === 3) {
+	if (p[0].toLowerCase() === 'get') {
+	    if (p[1].toLowerCase() === 'cpu') {
+		t = p[2];
+		if (t !== undefined) {
+		    t = t.toLowerCase();
+		    if (t === 'once') {
+			out = 1;
+		    }
+		    else if (t === 'loop') {
+			out = 2;
+		    }
+		}
+	    }
+	}
+    }
+    return out;
+};
+
+App.loop = function(socket) {
+    var timer;
     timer = setInterval(function() {
 	if (socket.readyState === 'open') {
-	    App.process(socket);
+	    App.process(socket, false);
 	    return true;
 	}
 	else {
 	    clearInterval(timer);
+	    socket.end();
 	    return false;
         }
     }, 1000);
     return true;
 };
 
-App.process = function (socket) {
+App.process = function (socket, closeIt) {
     var r, fData;
     fData = '';
     r = fs.createReadStream('/proc/stat', {
@@ -78,18 +119,20 @@ App.process = function (socket) {
 	return true;
     });
     r.addListener('end', function() {
-	App.gotStats(socket, fData);
+	App.gotStats(socket, fData, closeIt);
 	return true;
     });
     return true;
 };
 
-App.gotStats = function(socket, data) {
+App.gotStats = function(socket, data, closeIt) {
     var allStats, o;
     allStats = App.build(data);
     o = App.output(allStats);
     socket.write(o);
-    //socket.end();
+    if (closeIt) {
+	socket.end();
+    }
     return true;
 };
 
@@ -162,7 +205,12 @@ App.calculate = function(cpuIndex, fields, prevIdle, prevTotal) {
     });
     diffIdle = idle - prevIdle;
     diffTotal = total - prevTotal;
-    diffUsage = (((diffTotal - diffIdle) / diffTotal) * 100);
+    if (diffTotal === 0) {
+	diffUsage = 0.0;
+    }
+    else {
+        diffUsage = (((diffTotal - diffIdle) / diffTotal) * 100);
+    }
     out = [diffUsage, idle, total];
     return out;
 };
