@@ -53,22 +53,16 @@ App.gotStats = function(socket, data) {
 };
 
 App.output = function (allStats) {
-    var o, i, ii, s;
-    //console.log(allStats);
-    //return allStats[0].toString('ascii');
+    var o;
     o = "";
     for (i = 0, ii = allStats.length; i < ii; i++) {
 	s = allStats[i];
-        if (s[0] === 'all') {
-            o += 'total';
-        }
-	else {
-	    o += s[0].toString();
-        }
-	o += " ";
-	o += s[1];
-	o += "\n";
+	o += s[1].toFixed(2);
+	if (i < (ii - 1)) {
+	    o += " ";
+	}
     }
+    o += "\n";
     return o;
 };
 
@@ -84,7 +78,7 @@ App.build = function(data) {
 	    cpuIdent = cpu.charAt(3);
 	    cpuIndex = null;
 	    if (cpuIdent === '') {
-		cpuIndex = 'all';
+		cpuIndex = -1;
 	    }
 	    else if (!isNaN(cpuIdent)) {
 		cpuIndex = parseInt(cpuIdent);
@@ -125,16 +119,9 @@ App.calculate = function(cpuIndex, fields, prevIdle, prevTotal) {
     total = fields.reduce(function (p, c) {
 	return (parseInt(p) + parseInt(c));
     });
-    //if (cpuIndex === 'all') {
-    //    console.log(idle + " " + total);
-    //}
-    //console.log(fields);
-    //console.log(prevIdle, prevTotal);
     diffIdle = idle - prevIdle;
     diffTotal = total - prevTotal;
-    diffUsage = ((((1000 * (diffTotal - diffIdle)) / diffTotal) + 5) / 10);
-    //diffUsage = (1000 * (diffTotal - diffIdle) / diffTotal + 5) / 10;
-    //console.log((diffTotal - diffIdle) / diffTotal);
+    diffUsage = (((diffTotal - diffIdle) / diffTotal) * 100);
     out = [diffUsage, idle, total];
     return out;
 };
