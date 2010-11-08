@@ -283,7 +283,7 @@ App.getStatRow = function(cpuIndex, fields) {
  * @return {Array}
  */
 App.calculate = function(cpuIndex, fields, prevIdle, prevTotal) {
-    var idle, total, diffIdle, prevTotal;
+    var idle, total, diffIdle, diffTotal;
     idle = fields[3];
     total = fields.reduce(function (p, c) {
        return (parseInt(p) + parseInt(c));
