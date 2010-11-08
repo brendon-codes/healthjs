@@ -1,0 +1,90 @@
+Health.js
+
+Network service for getting CPU of remote system.
+Tested on Node.js 0.2.3 and 0.2.4.
+This will only run on Linux. OS and BSD are not supported.
+
+Another project by Last.VC <http://last.vc>
+Last.vc provides support capital for early-stage web and mobile
+technology companies, and seek to partner with talented entrepreneurs
+to build successful enterprises and drive value for our shareholders. 
+
+Author: Brendon Crawford
+Some concepts taken from http://colby.id.au/node/39
+See http://colby.id.au/node/39
+See https://github.com/brendoncrawford/healthjs
+
+##
+## Basic Usage
+##
+
+The format for running health.js server is:
+
+  $ node health.js [IP, [PORT]]
+
+To run the server, any of the following will work:
+
+  $ node health.js
+  $ node health.js 127.0.0.1
+  $ node health.js 127.0.0.1 37778
+
+To get help, you can run:
+
+  $ node health.js --help
+
+A client should connect via tcp to the listening port. The default
+port is 37778 and the default interface to listen on is 127.0.0.1. To listen
+on all interfaces specify "0.0.0.0" as the IP.
+
+##
+## Connecting with Client
+##
+
+Once connected, the client may send one of two messages:
+
+  get cpu once
+    This will grab one cpu update an exit
+
+  get cpu loop
+    This will indefinitely grab cpu updates until client disconnects
+
+The response from the server will be 2 or more decimal (floating point)
+numbers separated by a space on a single line. An example response
+might look like this:
+
+  4.19 6.50 2.44 2.97 4.88
+
+Column #1 is the average percentage of CPU usage for all cores/processors
+in the system. All columns after #1 represent the CPU usage of that
+particular processor/core. So, in the example above, the breakdown would be:
+
+  System Average: 4.19%
+  Processor #1: 6.50%
+  Processor #2: 2.44%
+  Processor #3: 2.97%
+  Processor #4: 4.88%
+
+Here are some examples of connecting via common UNIX utilities:
+
+  ## Get one single cpu status using netcat
+  $ echo "get cpu once" | nc -q -1 localhost 37778
+
+  ## Get infinite loop of cpu status, updated every 2 seconds, using netcat
+  $ echo "get cpu loop" | nc -q -1 localhost 37778
+
+  ## Get infinite loop of cpu status, updated every 2 seconds, using telnet
+  $ telnet localhost 37778
+  $ telnet> get cpu loop
+
+##
+## Security Concerns
+##
+
+This service provides no means of authentication. It should only be
+run on private interfaces/IPs which are only exposed to your local trusted
+network. It should never be run on a public-facing IP or an IP on an un-trusted
+network. If you don't know what this means, you probably should not be using
+this utility.
+
+
+
