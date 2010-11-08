@@ -1,5 +1,14 @@
 #!/usr/bin/env node
 
+/**
+ * Network service for calculating CPU of remote machine
+ * Some concepts taken from:
+ * http://colby.id.au/node/39
+ *
+ * @author Brendon Crawford
+ *
+ */
+
 var net = require('net');
 var fs = require('fs');
 
@@ -41,7 +50,7 @@ App.gotStats = function(socket, data) {
 };
 
 App.build = function(data) {
-    var d, i, ii, s, fields, thisStat, cpu, cpuIdent;
+    var d, i, ii, s, fields, thisStat, cpu, cpuIdent, allStats;
     d = data.split("\n");
     for (i = 0, ii = d.length; i < ii; i++) {
 	s = d[i];
@@ -58,6 +67,7 @@ App.build = function(data) {
 	    }
 	    if (cpuIndex !== null) {
 		thisStat = App.getStat(cpuIndex, fields);
+		allStats.push(thisStat);
 	    }
 	}
     }
@@ -83,7 +93,9 @@ App.getStatRow = function(cpuIndex, fields) {
 App.calculate = function(fields, prevIdle, prevTotal) {
     var idle, total, diffIdle, prevTotal;
     idle = fields[4];
-    total = fields.reduce(function (p, c) { return (p + c); });
+    total = fields.reduce(function (p, c) {
+	return (parseInt(p) + parseInt(c));
+    });
     diffIdle = idle - prevIdle;
     diffTotal = total - prevTotal;
     diffUsage = ((((1000 * (diffTotal - diffIdle)) / diffTotal) + 5) / 10);
