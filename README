@@ -80,7 +80,11 @@ Here are some examples of connecting via common UNIX utilities:
 This service provides no means of authentication. It should only be
 run on private interfaces/IPs which are only exposed to your local trusted
 network. It should never be run on a public-facing IP or an IP on an un-trusted
-network. If you don't know what this means, you probably should not be using
+network. If you need to run this on an untrusted network, or if you want an
+an authentication mechanism, you should run it host 127.0.0.1 and access it
+via an SSH tunnel.
+
+If you don't know what any of this means, you probably should not be using
 this utility.
 
 
