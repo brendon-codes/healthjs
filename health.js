@@ -32,7 +32,7 @@
 
 var net = require('net');
 var fs = require('fs');
-
+var optparse = require('./lib/optparse');
 
 var App = {};
 App.prevTotal = {};
@@ -45,7 +45,8 @@ App.prevIdle = {};
  * @return {Int}
  */
 App.main = function (args) {
-    var port, host;
+    var options;
+    /*
     if (args[2] === '--help') {
         console.log('Usage: health.js [IP, [PORT]]');
         return 0;
@@ -71,9 +72,50 @@ App.main = function (args) {
     else {
         port = parseInt(port, 10);
     }
-    console.log("Listening on", host, "port", port);
-    net.createServer(App.connected).listen(port, host);
+    */
+    options = App.getOptions(args);
+    //net.createServer(App.connected).listen(port, host);
     return 0;
+};
+
+App.getOptions = function(args) {
+    var options, optParser;
+    options = {
+        'help' : false,
+        'listen' : null,
+        'remote' : null,
+        'threshold' : 90
+    }
+    optParser = new optparse.OptionParser([
+        ['-h', '--help', 'Show this help'],
+        ['-L', '--listen IP', 'IP to listen on'],
+        ['-r', '--remote IP', 'IP to notify when cpu reaches threshold'],
+        ['-t', '--threshold NUMBER',
+         'Percentage threshold to be reached for notification']
+     ]);
+    optParser.banner = "Usage: node health.js [OPTIONS]";
+    optParser.on('help', function (val) {
+        options.help = true;
+        return true;
+    });
+    optParser.on('listen', function (val) {
+        options.listen = val;
+        return true;
+    });
+    optParser.on('remote', function (val) {
+        options.remote = val;
+        return true;
+    });
+    optParser.on('threshold', function (val) {
+        options.threshold = val;
+        return true;
+    });
+    optParser.parse(args);
+    if (options.help) {
+        console.log(optParser.toString());
+        process.exit(0);
+    }
+    return options;
 };
 
 /**
