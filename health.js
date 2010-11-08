@@ -1,11 +1,28 @@
 #!/usr/bin/env node
 
 /**
- * Network service for calculating CPU of remote machine
- * Some concepts taken from:
- * http://colby.id.au/node/39
+ * Network service for calculating CPU of remote machine.
+ * Another project by Last.VC <http://last.vc>
+ * Tested on Node.js 0.2.3 and 0.2.4
  *
  * @author Brendon Crawford
+ * @note Some concepts taken from http://colby.id.au/node/39
+ * @see http://colby.id.au/node/39
+ * @see https://github.com/brendoncrawford/healthjs
+ *
+ * @license
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
@@ -18,6 +35,12 @@ var App = {};
 App.prevTotal = {};
 App.prevIdle = {};
 
+/**
+ * Startup
+ *
+ * @param {Array} args
+ * @return {Int}
+ */
 App.main = function(args) {
     var port, host;
     if (args[2] === '--help') {
@@ -50,6 +73,12 @@ App.main = function(args) {
     return 0;
 };
 
+/**
+ * Client Connected
+ *
+ * @param {Stream} socket
+ * @return {Bool}
+ */
 App.connected = function (socket) {
     var timer;
     socket.setEncoding("utf8");
@@ -68,6 +97,12 @@ App.connected = function (socket) {
     return true;
 };
 
+/**
+ * Extracts input command
+ *
+ * @param {String} msg
+ * @return {Int}
+ */
 App.getCommand = function (msg) {
     var out, t, p;
     p = msg.replace(/^\s+|\s+$/g, '').split(/\s+/g);
@@ -91,6 +126,12 @@ App.getCommand = function (msg) {
     return out;
 };
 
+/**
+ * Infinite loop over cpu extraction process
+ *
+ * @param {Stream} socket
+ * @return {Bool}
+ */
 App.loop = function(socket) {
     var timer;
     timer = setInterval(function() {
@@ -103,10 +144,17 @@ App.loop = function(socket) {
 	    socket.end();
 	    return false;
         }
-    }, 1000);
+    }, 2000);
     return true;
 };
 
+/**
+ * Process cpu stats extraction
+ *
+ * @param {Stream} socket
+ * @param {Bool} closeIt
+ * @return {Bool}
+ */
 App.process = function (socket, closeIt) {
     var r, fData;
     fData = '';
@@ -125,6 +173,14 @@ App.process = function (socket, closeIt) {
     return true;
 };
 
+/**
+ * After stats have been extracted
+ *
+ * @param {Stream} scoket
+ * @param {String} data
+ * @param {Bool} closeIt
+ * @return {Bool}
+ */
 App.gotStats = function(socket, data, closeIt) {
     var allStats, o;
     allStats = App.build(data);
@@ -136,6 +192,12 @@ App.gotStats = function(socket, data, closeIt) {
     return true;
 };
 
+/**
+ * Formats output to client
+ *
+ * @param {Array} allStats
+ * @return {String}
+ */
 App.output = function (allStats) {
     var o;
     o = "";
@@ -150,6 +212,12 @@ App.output = function (allStats) {
     return o;
 };
 
+/**
+ * Builds stats based on raw data
+ *
+ * @param {String} data
+ * @return {Array} 
+ */
 App.build = function(data) {
     var d, i, ii, s, fields, thisStat, cpu, cpuIdent, allStats;
     d = data.split("\n");
@@ -173,6 +241,9 @@ App.build = function(data) {
 		allStats.push([cpuIndex, thisStat]);
 	    }
 	}
+        else {
+	    break;
+        }
     }
     return allStats;
 };
