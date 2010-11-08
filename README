@@ -4,10 +4,7 @@ Network service for getting CPU of remote system.
 Tested on Node.js 0.2.3 and 0.2.4.
 This will only run on Linux. OS and BSD are not supported.
 
-Another project by Last.VC <http://last.vc>
-Last.vc provides support capital for early-stage web and mobile
-technology companies, and seek to partner with talented entrepreneurs
-to build successful enterprises and drive value for our shareholders. 
+Another fun project by Last.VC <http://last.vc>
 
 Author: Brendon Crawford
 Some concepts taken from http://colby.id.au/node/39
