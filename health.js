@@ -248,7 +248,7 @@ App.getCommand = function (msg) {
  */
 App.loop = function (callback) {
     var timer;
-    App.process(function() {
+    App.process(function () {
         var timer;
         if (callback !== undefined) {
             callback.apply();
