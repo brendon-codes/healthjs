@@ -38,6 +38,8 @@ var App = {};
 App.prevTotal = {};
 App.prevIdle = {};
 App.allStats = {};
+App.options = {};
+App.threshold = 0;
 App.outputData = '';
 
 /**
@@ -48,10 +50,11 @@ App.outputData = '';
  */
 App.main = function (args) {
     var options;
-    options = App.getOptions(args);
+    App.options = App.getOptions(args);
     App.loop();
-    if (options.listen !== null) {
-        net.createServer(App.connected).listen(options.port, options.listen);
+    if (App.options.listen !== null) {
+        net.createServer(App.connected).listen(App.options.port,
+                                               App.options.listen);
     }
     return 0;
 };
@@ -68,17 +71,27 @@ App.getOptions = function (args) {
     options = {
         'help' : false,
         'listen' : null,
-        'remote' : null,
+        'remoteHost' : null,
+        'remotePort' : 37779,
         'port' : 37778,
-        'threshold' : 90
+        'thresholdCpu' : 80,
+        'thresholdCycles' : 10,
+        'cycleTime' : 6000
     };
     optParser = new optparse.OptionParser([
-        ['-h', '--help', 'Show this help'],
-        ['-p', '--port NUMBER', 'Port to listen on'],
-        ['-L', '--listen IP', 'IP to listen on'],
-        ['-r', '--remote IP', 'IP to notify when cpu reaches threshold'],
-        ['-t', '--threshold NUMBER',
-         'Percentage threshold to be reached for notification']
+        ['-h', '--help', 'Show this help.'],
+        ['-p', '--port NUMBER', 'Port to listen on. Default is 37778.'],
+        ['-L', '--listen IP', 'IP to listen on. Default is none.'],
+        ['-r', '--remote-host IP',
+         'IP to notify when cpu reaches threshold. Default is none.'],
+        ['-x', '--remote-port NUMBER',
+         'Remote service port for notifications. Default is 37779.'],
+        ['-t', '--threshold-cpu NUMBER',
+         'Percentage threshold. Default is 80.'],
+        ['-y', '--threshold-cycles NUMBER',
+         'Number of cycles for notification. Default is 10.'],
+        ['-c', '--cycle-time NUMBER',
+         'Amount of time for each cycle in milliseconds. Default is 6000.']
     ]);
     optParser.banner = "Usage: node health.js [OPTIONS]";
     optParser.on('help', function (val) {
@@ -93,12 +106,24 @@ App.getOptions = function (args) {
         options.listen = val;
         return true;
     });
-    optParser.on('remote', function (name, val) {
-        options.remote = val;
+    optParser.on('remote-host', function (name, val) {
+        options.remoteHost = val;
         return true;
     });
-    optParser.on('threshold', function (name, val) {
-        options.threshold = parseInt(val, 10);
+    optParser.on('remote-port', function (name, val) {
+        options.remotePort = val;
+        return true;
+    });
+    optParser.on('threshold-cpu', function (name, val) {
+        options.thresholdCpu = parseInt(val, 10);
+        return true;
+    });
+    optParser.on('threshold-cycles', function (name, val) {
+        options.thresholdCycles = parseInt(val, 10);
+        return true;
+    });
+    optParser.on('cycle-time', function (name, val) {
+        options.cycleTime = parseInt(val, 10);
         return true;
     });
     optParser.parse(args);
@@ -171,7 +196,7 @@ App.loopOutputToClient = function (socket) {
             clearInterval(timer);
             return false;
         }
-    }, 3000);
+    }, parseInt(App.options.cycleTime / 2, 10));
 };
 
 /**
@@ -213,7 +238,7 @@ App.loop = function () {
     timer = setInterval(function () {
         App.process();
         return false;
-    }, 6000);
+    }, App.options.cycleTime);
     return true;
 };
 
@@ -250,7 +275,73 @@ App.gotStats = function (data) {
     var allStats, o;
     App.allStats = App.build(data);
     App.outputData = App.output(App.allStats);
+    if (App.options.remoteHost !== null) {
+        App.checkNotifications();
+    }
     return true;
+};
+
+/**
+ * Checks thresholds
+ *
+ * @return {Bool}
+ */
+App.checkNotifications = function () {
+    var s, st, found;
+    for (s in App.allStats) {
+        if (App.allStats.hasOwnProperty(s)) {
+            st = App.allStats[s];
+            if (st >= App.options.thresholdCpu) {
+                App.threshold++;
+                found = true;
+                break;
+            }
+        }
+    }
+    if (!found) {
+        App.threshold = 0;
+    }
+    if (App.threshold >= App.options.thresholdCycles) {
+        App.notify(App.threshold, App.outputData);
+    }
+};
+
+/**
+ * Notify remote using a client connection
+ *
+ * @param {String} data
+ * @return {Bool}
+ */
+App.notify = function (threshold, data) {
+    var client;
+    client = net.createConnection(App.options.remotePort,
+                                  App.options.remoteHost);
+    client.on('connect', function (socket) {
+        var out;
+        socket.setEncoding('utf8');
+        if (socket.readyState === 'open') {
+            out = App.getNotifyData(threshold, data);
+            socket.write(out);
+        }
+        socket.end();
+        return true;
+    });
+    return true;
+};
+
+/**
+ * Get notify data to send
+ *
+ * @param {String} data
+ * @return {String}
+ */
+App.getNotifyData = function (threshold, data) {
+    var out, t;
+    t = (threshold * App.options.cycleTime).toString();
+    out  = "put cpu\n";
+    out += t + "\n";
+    out += data;
+    return out
 };
 
 /**
@@ -260,13 +351,17 @@ App.gotStats = function (data) {
  * @return {String}
  */
 App.output = function (allStats) {
-    var o, i, ii, s;
+    var o, i, ii;
     o = "";
-    for (i = 0, ii = allStats.length; i < ii; i++) {
-        s = allStats[i];
-        o += s[1].toFixed(2);
-        if (i < (ii - 1)) {
-            o += " ";
+    ii = 0;
+    for (i in allStats) {
+        if (allStats.hasOwnProperty(i)) {
+            s = allStats[i];
+            if (ii > 0) {
+                o += " ";
+            }
+            o += s[1].toFixed(2);
+            ii++;
         }
     }
     o += "\n";
@@ -282,7 +377,7 @@ App.output = function (allStats) {
 App.build = function (data) {
     var d, i, ii, s, fields, thisStat, cpu, cpuIdent, allStats, cpuIndex;
     d = data.split("\n");
-    allStats = [];
+    allStats = {};
     for (i = 0, ii = d.length; i < ii; i++) {
         s = d[i];
         if (s.substr(0, 3) === 'cpu') {
@@ -298,7 +393,7 @@ App.build = function (data) {
             }
             if (cpuIndex !== null) {
                 thisStat = App.getStatRow(cpuIndex, fields);
-                allStats.push([cpuIndex, thisStat]);
+                allStats[cpuIndex] = thisStat;
             }
         }
         else {
