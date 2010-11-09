@@ -52,11 +52,12 @@ App.notifyDate = null;
 App.main = function (args) {
     var options;
     App.options = App.getOptions(args);
-    App.loop();
-    if (App.options.listen !== null) {
-        net.createServer(App.connected).listen(App.options.port,
-                                               App.options.listen);
-    }
+    App.loop(function () {
+        if (App.options.listen !== null) {
+            net.createServer(App.connected).listen(App.options.port,
+                                                   App.options.listen);
+        }
+    });
     return 0;
 };
 
@@ -240,14 +241,22 @@ App.getCommand = function (msg) {
 /**
  * Infinite loop over cpu extraction process
  *
+ * @param {Function} callback
+ *        Function to be called after data is first extracted.
  * @return {Bool}
  */
-App.loop = function () {
+App.loop = function (callback) {
     var timer;
-    timer = setInterval(function () {
-        App.process();
-        return false;
-    }, App.options.cycleTime);
+    App.process(function() {
+        var timer;
+        if (callback !== undefined) {
+            callback.apply();
+        }
+        setInterval(function () {
+            App.process();
+            return true;
+        }, App.options.cycleTime);
+    });
     return true;
 };
 
@@ -256,7 +265,7 @@ App.loop = function () {
  *
  * @return {Bool}
  */
-App.process = function () {
+App.process = function (callback) {
     var r, fData;
     fData = '';
     r = fs.createReadStream('/proc/stat', {
@@ -269,6 +278,9 @@ App.process = function () {
     });
     r.addListener('end', function () {
         App.gotStats(fData);
+        if (callback !== undefined) {
+            callback.apply();
+        }
         return true;
     });
     return true;
