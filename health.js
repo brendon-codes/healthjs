@@ -63,7 +63,7 @@ App.main = function (args) {
  * @param {Array} args
  * @return {Object}
  */
-App.getOptions = function(args) {
+App.getOptions = function (args) {
     var options, optParser;
     options = {
         'help' : false,
@@ -71,7 +71,7 @@ App.getOptions = function(args) {
         'remote' : null,
         'port' : 37778,
         'threshold' : 90
-    }
+    };
     optParser = new optparse.OptionParser([
         ['-h', '--help', 'Show this help'],
         ['-p', '--port NUMBER', 'Port to listen on'],
@@ -79,7 +79,7 @@ App.getOptions = function(args) {
         ['-r', '--remote IP', 'IP to notify when cpu reaches threshold'],
         ['-t', '--threshold NUMBER',
          'Percentage threshold to be reached for notification']
-     ]);
+    ]);
     optParser.banner = "Usage: node health.js [OPTIONS]";
     optParser.on('help', function (val) {
         options.help = true;
