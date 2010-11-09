@@ -37,6 +37,8 @@ var optparse = require('./lib/optparse');
 var App = {};
 App.prevTotal = {};
 App.prevIdle = {};
+App.allStats = {};
+App.outputData = '';
 
 /**
  * Startup
@@ -46,48 +48,33 @@ App.prevIdle = {};
  */
 App.main = function (args) {
     var options;
-    /*
-    if (args[2] === '--help') {
-        console.log('Usage: health.js [IP, [PORT]]');
-        return 0;
-    }
-    else {
-        host = args[2];
-        port = args[3];
-    }
-    if (host === undefined) {
-        host = '127.0.0.1';
-    }
-    //else if (!net.isIP(host)) {
-    //  console.log('You must supply a valid IP.');
-    //  return 1;
-    //}
-    if (port === undefined) {
-        port = 37778;
-    }
-    else if (isNaN(port)) {
-        console.log('Port is invalid.');
-        return 1;
-    }
-    else {
-        port = parseInt(port, 10);
-    }
-    */
     options = App.getOptions(args);
-    //net.createServer(App.connected).listen(port, host);
+    App.loop();
+    if (options.listen !== null) {
+        net.createServer(App.connected).listen(options.port, options.listen);
+    }
     return 0;
 };
 
+/**
+ * Gets command line arguments
+ * Displays help if needed
+ *
+ * @param {Array} args
+ * @return {Object}
+ */
 App.getOptions = function(args) {
     var options, optParser;
     options = {
         'help' : false,
         'listen' : null,
         'remote' : null,
+        'port' : 37778,
         'threshold' : 90
     }
     optParser = new optparse.OptionParser([
         ['-h', '--help', 'Show this help'],
+        ['-p', '--port NUMBER', 'Port to listen on'],
         ['-L', '--listen IP', 'IP to listen on'],
         ['-r', '--remote IP', 'IP to notify when cpu reaches threshold'],
         ['-t', '--threshold NUMBER',
@@ -98,16 +85,20 @@ App.getOptions = function(args) {
         options.help = true;
         return true;
     });
-    optParser.on('listen', function (val) {
+    optParser.on('port', function (name, val) {
+        options.port = parseInt(val, 10);
+        return true;
+    });
+    optParser.on('listen', function (name, val) {
         options.listen = val;
         return true;
     });
-    optParser.on('remote', function (val) {
+    optParser.on('remote', function (name, val) {
         options.remote = val;
         return true;
     });
-    optParser.on('threshold', function (val) {
-        options.threshold = val;
+    optParser.on('threshold', function (name, val) {
+        options.threshold = parseInt(val, 10);
         return true;
     });
     optParser.parse(args);
@@ -127,19 +118,60 @@ App.getOptions = function(args) {
 App.connected = function (socket) {
     var timer;
     socket.setEncoding("utf8");
+    socket.appLastOutput = null;
     socket.on('data', function (msg) {
         var command;
         command = App.getCommand(msg);
         socket.removeAllListeners('data');
         if (command === 1) {
-            App.process(socket, true);
+            App.sendOutputToClient(socket, true);
         }
-        else if (command === 2) {
-            App.loop(socket);
+        if (command === 2) {
+            App.loopOutputToClient(socket);
         }
         return true;
     });
     return true;
+};
+
+/**
+ * Send output to client
+ *
+ * @param {Stream} socket
+ * @param {Bool} closeIt
+ * @return {Bool}
+ */
+App.sendOutputToClient = function (socket, closeIt) {
+    socket.write(App.outputData);
+    if (closeIt) {
+        socket.end();
+    }
+    return true;
+};
+
+/**
+ * Loops output to client
+ * 
+ * @param {Stream} socket
+ * @return {Bool}
+ */
+App.loopOutputToClient = function (socket) {
+    var timer;
+    timer = setInterval(function () {
+        if (socket.readyState === 'open') {
+            if (socket.appLastOutput === null ||
+                    socket.appLastOutput !== App.outputData) {
+                App.sendOutputToClient(socket, false);
+                socket.appLastOutput = App.outputData;
+            }
+            return true;
+        }
+        else {
+            socket.end();
+            clearInterval(timer);
+            return false;
+        }
+    }, 3000);
 };
 
 /**
@@ -174,33 +206,23 @@ App.getCommand = function (msg) {
 /**
  * Infinite loop over cpu extraction process
  *
- * @param {Stream} socket
  * @return {Bool}
  */
-App.loop = function (socket) {
+App.loop = function () {
     var timer;
     timer = setInterval(function () {
-        if (socket.readyState === 'open') {
-            App.process(socket, false);
-            return true;
-        }
-        else {
-            clearInterval(timer);
-            socket.end();
-            return false;
-        }
-    }, 2000);
+        App.process();
+        return false;
+    }, 6000);
     return true;
 };
 
 /**
  * Process cpu stats extraction
  *
- * @param {Stream} socket
- * @param {Bool} closeIt
  * @return {Bool}
  */
-App.process = function (socket, closeIt) {
+App.process = function () {
     var r, fData;
     fData = '';
     r = fs.createReadStream('/proc/stat', {
@@ -212,7 +234,7 @@ App.process = function (socket, closeIt) {
         return true;
     });
     r.addListener('end', function () {
-        App.gotStats(socket, fData, closeIt);
+        App.gotStats(fData);
         return true;
     });
     return true;
@@ -221,19 +243,13 @@ App.process = function (socket, closeIt) {
 /**
  * After stats have been extracted
  *
- * @param {Stream} scoket
  * @param {String} data
- * @param {Bool} closeIt
  * @return {Bool}
  */
-App.gotStats = function (socket, data, closeIt) {
+App.gotStats = function (data) {
     var allStats, o;
-    allStats = App.build(data);
-    o = App.output(allStats);
-    socket.write(o);
-    if (closeIt) {
-        socket.end();
-    }
+    App.allStats = App.build(data);
+    App.outputData = App.output(App.allStats);
     return true;
 };
 
@@ -307,7 +323,7 @@ App.getStatRow = function (cpuIndex, fields) {
     if (App.prevIdle[cpuIndex] === undefined) {
         App.prevIdle[cpuIndex] = 0;
     }
-    calc = App.calculate(cpuIndex, fields,
+    calc = App.calculate(fields,
                          App.prevIdle[cpuIndex],
                          App.prevTotal[cpuIndex]);
     diffUsage = calc[0];
@@ -319,13 +335,12 @@ App.getStatRow = function (cpuIndex, fields) {
 /**
  * Perform stat calculations
  * 
- * @param {Int} cpuIndex
  * @param {Array} fields
  * @param {Int} prevIdle
  * @param {Int} prevTotal
  * @return {Array}
  */
-App.calculate = function (cpuIndex, fields, prevIdle, prevTotal) {
+App.calculate = function (fields, prevIdle, prevTotal) {
     var idle, total, diffIdle, diffTotal, diffUsage, out;
     idle = fields[3];
     total = fields.reduce(function (p, c) {
