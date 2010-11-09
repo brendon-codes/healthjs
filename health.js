@@ -37,9 +37,9 @@ var optparse = require('./lib/optparse');
 var App = {};
 App.prevTotal = {};
 App.prevIdle = {};
-App.allStats = {};
+App.allStats = [];
 App.options = {};
-App.threshold = 0;
+App.tally = [];
 App.outputData = '';
 App.notifyDate = null;
 
@@ -57,6 +57,7 @@ App.main = function (args) {
             net.createServer(App.connected).listen(App.options.port,
                                                    App.options.listen);
         }
+        return true;
     });
     return 0;
 };
@@ -308,26 +309,21 @@ App.gotStats = function (data) {
  * @return {Bool}
  */
 App.checkNotifications = function () {
-    var s, st, found, nd, td;
-    for (s in App.allStats) {
-        if (App.allStats.hasOwnProperty(s)) {
-            st = App.allStats[s];
-            if (st >= App.options.thresholdCpu) {
-                App.threshold++;
-                found = true;
-                break;
-            }
-        }
-    }
-    if (!found) {
-        App.threshold = 0;
-    }
-    if (App.threshold >= App.options.thresholdCycles) {
+    var mx, tallySum, avg, nd, td;
+    mx = App.allStats.reduce(function (a, b) {
+        return Math.max(a, b);
+    }, 0);
+    App.tally.push(mx);
+    App.tally = App.tally.slice(-App.options.thresholdCycles);
+    tallySum = App.tally.reduce(function (a, b) {
+        return (a + b);
+    });
+    avg = tallySum / App.options.thresholdCycles;
+    if (avg >= App.options.thresholdCycles) {
         nd = new Date();
         td = (App.options.resendWait * 60 * 1000);
-        //console.log(nd, td, App.notifyDate);
         if (App.notifyDate === null || ((nd - App.notifyDate) >= td)) {
-            App.notify(App.threshold, App.outputData);
+            App.notify(avg, App.outputData);
             App.threshold = 0;
             App.notifyDate = nd;
         }
@@ -338,10 +334,11 @@ App.checkNotifications = function () {
 /**
  * Notify remote using a client connection
  *
+ * @param {Float} avg
  * @param {String} data
  * @return {Bool}
  */
-App.notify = function (threshold, data) {
+App.notify = function (avg, data) {
     var client;
     client = null;
     client = net.createConnection(App.options.remotePort,
@@ -349,7 +346,7 @@ App.notify = function (threshold, data) {
     client.on('error', function (exc) {
         if (exc.errno === process.ECONNREFUSED) {
             console.log("Could not connect to notification server",
-                        this.remoteAddress, App.options.remotePort);
+                        App.options.remoteHost, App.options.remotePort);
         }
         return true;
     });
@@ -357,7 +354,7 @@ App.notify = function (threshold, data) {
         var out;
         this.setEncoding('utf8');
         if (this.readyState === 'open') {
-            out = App.getNotifyData(threshold, data);
+            out = App.getNotifyData(avg, data);
             this.write(out);
         }
         this.end();
@@ -369,15 +366,17 @@ App.notify = function (threshold, data) {
 /**
  * Get notify data to send
  *
+ * @param {Float} avg
  * @param {String} data
  * @return {String}
  */
-App.getNotifyData = function (threshold, data) {
+App.getNotifyData = function (avg, data) {
     var o, t, a;
-    t = (threshold * App.options.cycleTime).toString();
+    t = (App.options.thresholdCycles * App.options.cycleTime).toString();
     a = [];
     a.push("put cpu");
     a.push(t);
+    a.push(avg.toFixed(2));
     a.push(data);
     o = a.join('|');
     return o;
@@ -393,15 +392,12 @@ App.output = function (allStats) {
     var o, i, ii, s;
     o = "";
     ii = 0;
-    for (i in allStats) {
-        if (allStats.hasOwnProperty(i)) {
-            s = allStats[i];
-            if (ii > 0) {
-                o += " ";
-            }
-            o += s.toFixed(2);
-            ii++;
+    for (i = 0, ii = allStats.length; i < ii; i++) {
+        s = allStats[i];
+        if (i > 0) {
+            o += " ";
         }
+        o += s.toFixed(2);
     }
     o += "\n";
     return o;
@@ -416,7 +412,7 @@ App.output = function (allStats) {
 App.build = function (data) {
     var d, i, ii, s, fields, thisStat, cpu, cpuIdent, allStats, cpuIndex;
     d = data.split("\n");
-    allStats = {};
+    allStats = [];
     for (i = 0, ii = d.length; i < ii; i++) {
         s = d[i];
         if (s.substr(0, 3) === 'cpu') {
@@ -432,7 +428,7 @@ App.build = function (data) {
             }
             if (cpuIndex !== null) {
                 thisStat = App.getStatRow(cpuIndex, fields);
-                allStats[cpuIndex] = thisStat;
+                allStats.push(thisStat);
             }
         }
         else {
