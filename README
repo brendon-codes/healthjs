@@ -179,11 +179,11 @@ notification to "--remote-host" if it is set.
 
 The event notification will have the following format:
 
-COMMAND|ELAPSED_TIME|CPU_AVERAGE|CPU_USAGE
+  COMMAND|ELAPSED_TIME|CPU_AVERAGE|CPU_USAGE
 
 Example Notification:
 
-put cpu|30000|14.33|17.28 3.11 4.75 55.32 6.12
+  put cpu|30000|14.33|17.28 3.11 4.75 55.32 6.12
 
 Explanation of parameters:
 
