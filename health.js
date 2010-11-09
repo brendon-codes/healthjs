@@ -361,12 +361,14 @@ App.notify = function (threshold, data) {
  * @return {String}
  */
 App.getNotifyData = function (threshold, data) {
-    var out, t;
+    var o, t, a;
     t = (threshold * App.options.cycleTime).toString();
-    out  = "put cpu\n";
-    out += t + "\n";
-    out += data;
-    return out
+    a = [];
+    a.push("put cpu");
+    a.push(t);
+    a.push(data);
+    o = a.join('|');
+    return o
 };
 
 /**
