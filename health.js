@@ -41,6 +41,7 @@ App.allStats = {};
 App.options = {};
 App.threshold = 0;
 App.outputData = '';
+App.notifyDate = null;
 
 /**
  * Startup
@@ -76,7 +77,8 @@ App.getOptions = function (args) {
         'port' : 37778,
         'thresholdCpu' : 80,
         'thresholdCycles' : 10,
-        'cycleTime' : 6000
+        'cycleTime' : 6000,
+        'resendWait' : 720
     };
     optParser = new optparse.OptionParser([
         ['-h', '--help', 'Show this help.'],
@@ -91,7 +93,10 @@ App.getOptions = function (args) {
         ['-y', '--threshold-cycles NUMBER',
          'Number of cycles for notification. Default is 10.'],
         ['-c', '--cycle-time NUMBER',
-         'Amount of time for each cycle in milliseconds. Default is 6000.']
+         'Amount of time for each cycle in milliseconds. Default is 6000.'],
+        ['-e', '--resend-wait NUMBER',
+         'Amount of time in minutes to wait before ' +
+         'resending notification. Default is 720.']
     ]);
     optParser.banner = "Usage: node health.js [OPTIONS]";
     optParser.on('help', function (val) {
@@ -124,6 +129,10 @@ App.getOptions = function (args) {
     });
     optParser.on('cycle-time', function (name, val) {
         options.cycleTime = parseInt(val, 10);
+        return true;
+    });
+    optParser.on('resend-wait', function (name, val) {
+        options.resendWait = parseInt(val, 10);
         return true;
     });
     optParser.parse(args);
@@ -287,7 +296,7 @@ App.gotStats = function (data) {
  * @return {Bool}
  */
 App.checkNotifications = function () {
-    var s, st, found;
+    var s, st, found, nd, td;
     for (s in App.allStats) {
         if (App.allStats.hasOwnProperty(s)) {
             st = App.allStats[s];
@@ -302,8 +311,14 @@ App.checkNotifications = function () {
         App.threshold = 0;
     }
     if (App.threshold >= App.options.thresholdCycles) {
-        App.notify(App.threshold, App.outputData);
-        App.threshold = 0;
+        nd = new Date();
+        td = (App.options.resendWait * 60 * 1000);
+        //console.log(nd, td, App.notifyDate);
+        if (App.notifyDate === null || ((nd - App.notifyDate) >= td)) {
+            App.notify(App.threshold, App.outputData);
+            App.threshold = 0;
+            App.notifyDate = nd;
+        }
     }
     return true;
 };
