@@ -80,7 +80,7 @@ App.getOptions = function (args) {
         'thresholdCpu' : 80,
         'thresholdCycles' : 10,
         'cycleTime' : 6000,
-        'resendWait' : 720
+        'resendWait' : 360
     };
     optParser = new optparse.OptionParser([
         ['-h', '--help', 'Show this help.'],
