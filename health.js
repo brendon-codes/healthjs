@@ -334,7 +334,7 @@ App.notify = function (threshold, data) {
     client = null;
     client = net.createConnection(App.options.remotePort,
                                   App.options.remoteHost);
-    client.on('error', function(exc){
+    client.on('error', function (exc) {
         if (exc.errno === process.ECONNREFUSED) {
             console.log("Could not connect to notification server",
                         this.remoteAddress, App.options.remotePort);
@@ -368,7 +368,7 @@ App.getNotifyData = function (threshold, data) {
     a.push(t);
     a.push(data);
     o = a.join('|');
-    return o
+    return o;
 };
 
 /**
