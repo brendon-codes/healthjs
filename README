@@ -2,7 +2,7 @@ Health.js
 
 Network service for getting CPU of remote system.
 Tested on Node.js 0.2.3 and 0.2.4.
-This will only run on Linux. OS and BSD are not supported.
+This will only run on Linux. OSX and BSD are not supported.
 
 Another fun project by Last.VC <http://last.vc>
 
@@ -17,13 +17,12 @@ See https://github.com/brendoncrawford/healthjs
 
 The format for running health.js server is:
 
-  $ node health.js [IP, [PORT]]
+  $ node health.js [--listen IP, [--port PORT]]
 
 To run the server, any of the following will work:
 
-  $ node health.js
-  $ node health.js 127.0.0.1
-  $ node health.js 127.0.0.1 37778
+  $ node health.js --listen 127.0.0.1
+  $ node health.js --listen 127.0.0.1 --port 37778
 
 To get help, you can run:
 
