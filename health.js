@@ -303,7 +303,9 @@ App.checkNotifications = function () {
     }
     if (App.threshold >= App.options.thresholdCycles) {
         App.notify(App.threshold, App.outputData);
+        App.threshold = 0;
     }
+    return true;
 };
 
 /**
@@ -314,16 +316,24 @@ App.checkNotifications = function () {
  */
 App.notify = function (threshold, data) {
     var client;
+    client = null;
     client = net.createConnection(App.options.remotePort,
                                   App.options.remoteHost);
+    client.on('error', function(exc){
+        if (exc.errno === process.ECONNREFUSED) {
+            console.log("Could not connect to notification server",
+                        this.remoteAddress, App.options.remotePort);
+        }
+        return true;
+    });
     client.on('connect', function (socket) {
         var out;
-        socket.setEncoding('utf8');
-        if (socket.readyState === 'open') {
+        this.setEncoding('utf8');
+        if (this.readyState === 'open') {
             out = App.getNotifyData(threshold, data);
-            socket.write(out);
+            this.write(out);
         }
-        socket.end();
+        this.end();
         return true;
     });
     return true;
@@ -351,7 +361,7 @@ App.getNotifyData = function (threshold, data) {
  * @return {String}
  */
 App.output = function (allStats) {
-    var o, i, ii;
+    var o, i, ii, s;
     o = "";
     ii = 0;
     for (i in allStats) {
@@ -360,7 +370,7 @@ App.output = function (allStats) {
             if (ii > 0) {
                 o += " ";
             }
-            o += s[1].toFixed(2);
+            o += s.toFixed(2);
             ii++;
         }
     }
