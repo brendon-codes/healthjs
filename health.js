@@ -319,12 +319,11 @@ App.checkNotifications = function () {
         return (a + b);
     });
     avg = tallySum / App.options.thresholdCycles;
-    if (avg >= App.options.thresholdCycles) {
+    if (avg >= App.options.thresholdCpu) {
         nd = new Date();
         td = (App.options.resendWait * 60 * 1000);
         if (App.notifyDate === null || ((nd - App.notifyDate) >= td)) {
             App.notify(avg, App.outputData);
-            App.threshold = 0;
             App.notifyDate = nd;
         }
     }
