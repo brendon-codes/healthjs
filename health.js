@@ -5,10 +5,12 @@
  * Tested on Node.js 0.2.3 and 0.2.4
  * This will only run on Linux. OSX and BSD are not supported
  *
+ * Another fun project from Last.vc (http://last.vc/)
+ *
  * @author Brendon Crawford
  * @note Some concepts taken from http://colby.id.au/node/39
  * @see http://colby.id.au/node/39
- * @see https://github.com/brendoncrawford/healthjs
+ * @see https://github.com/last/healthjs
  *
  * @license
  *   This program is free software: you can redistribute it and/or modify
