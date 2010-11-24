@@ -41,15 +41,18 @@ Examples:
 Explanation of options:
 
 *   *--listen IP*
+
     This is the IP address that the streaming server should listen on.
     If this option is not provided, the streaming server will not be
     enabled.
 
 *   *--port PORT*
+
     This is the port number that the streaming server should listen on.
     The default is 37778.
 
 *   *--cycle-time NUMBER*
+
     This is the amount of milliseconds that the server should wait
     before calculating a new CPU check. Lower numbers have a higher
     performance overhead. The default is 6000 (6 seconds).
