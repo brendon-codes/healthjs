@@ -40,19 +40,19 @@ Examples:
 
 Explanation of options:
 
-* --listen IP
-  This is the IP address that the streaming server should listen on.
-  If this option is not provided, the streaming server will not be
-  enabled.
+*   *--listen IP*
+    This is the IP address that the streaming server should listen on.
+    If this option is not provided, the streaming server will not be
+    enabled.
 
-* --port PORT
-  This is the port number that the streaming server should listen on.
-  The default is 37778.
+*   *--port PORT*
+    This is the port number that the streaming server should listen on.
+    The default is 37778.
 
-* --cycle-time NUMBER
-  This is the amount of milliseconds that the server should wait
-  before calculating a new CPU check. Lower numbers have a higher
-  performance overhead. The default is 6000 (6 seconds).
+*   *--cycle-time NUMBER*
+    This is the amount of milliseconds that the server should wait
+    before calculating a new CPU check. Lower numbers have a higher
+    performance overhead. The default is 6000 (6 seconds).
 
 Running in Event Mode
 ---------------------
@@ -71,35 +71,35 @@ Examples:
 
 Explanation of options
 
-* --remote-host IP
-  This is the remote IP address to notify when CPU hits a certain threshold.
+*   *--remote-host IP*
+    This is the remote IP address to notify when CPU hits a certain threshold.
 
-* --remote-port PORT
-  This is the port of the remote host to notify when CPU hits a certain
-  threshold.
+*   *--remote-port PORT*
+    This is the port of the remote host to notify when CPU hits a certain
+    threshold.
 
-* --threshold-cpu NUMBER
-  This is the number that average CPU usage needs to hit to trigger
-  an event notification to remote host. The default for this is 80 (80%).
+*   *--threshold-cpu NUMBER*
+    This is the number that average CPU usage needs to hit to trigger
+    an event notification to remote host. The default for this is 80 (80%).
 
-* --cycle-time NUMBER
-  This is the amount of milliseconds that the server should wait
-  before calculating a new CPU check. Lower numbers have a higher
-  performance overhead. The default is 6000 (6 seconds).
+*   *--cycle-time NUMBER*
+    This is the amount of milliseconds that the server should wait
+    before calculating a new CPU check. Lower numbers have a higher
+    performance overhead. The default is 6000 (6 seconds).
 
-* --threshold-cycles NUMBER
-  This is the number of CPU checks that will be used to calculate CPU average.
-  The time interval of one single CPU check is determined by "--cycle-time".
-  A lower number will yield more volatile results at a quicker pace.
-  A higher number will yield more precise results at a slower pace.
-  For example, if "--cycle-time" is set to "4000", and "--threshold-cycles" is
-  set to 20, and "--threshold-cpu" is set to "60", this would mean that a
-  notification would be sent if over a period of 80 seconds, the average CPU
-  usage was 60%. The default for this is 10.
+*   *--threshold-cycles NUMBER*
+    This is the number of CPU checks that will be used to calculate CPU average.
+    The time interval of one single CPU check is determined by "--cycle-time".
+    A lower number will yield more volatile results at a quicker pace.
+    A higher number will yield more precise results at a slower pace.
+    For example, if "--cycle-time" is set to "4000", and "--threshold-cycles" is
+    set to 20, and "--threshold-cpu" is set to "60", this would mean that a
+    notification would be sent if over a period of 80 seconds, the average CPU
+    usage was 60%. The default for this is 10.
 
-* --resend-wait NUMBER
-  This is the amount of time in minutes that health.js should wait before sending
-  another notification to remote server. The default for this is 360 (6 hours).
+*   *--resend-wait NUMBER*
+    This is the amount of time in minutes that health.js should wait before sending
+    another notification to remote server. The default for this is 360 (6 hours).
 
 Running in Event and Streaming Mode Simultaneously
 --------------------------------------------------
@@ -123,11 +123,11 @@ port is 37778 and the default interface to listen on is 127.0.0.1. To listen
 on all interfaces specify "0.0.0.0" as the listening IP. Once connected, the
 client may send one of two messages:
 
-* get cpu once
-  This will grab one cpu update an exit
+*   *get cpu once*
+    This will grab one cpu update an exit
 
-* get cpu loop
-  This will indefinitely grab cpu updates until client disconnects
+*   *get cpu loop*
+    This will indefinitely grab cpu updates until client disconnects
 
 Here are some examples of connecting via common UNIX utilities:
 
@@ -157,11 +157,11 @@ Column #1 is the average percentage of CPU usage for all cores/processors
 in the system. All columns after #1 represent the CPU usage of that
 particular processor/core. So, in the example above, the breakdown would be:
 
-* System Average: 4.19%
-* Processor #1: 6.50%
-* Processor #2: 2.44%
-* Processor #3: 2.97%
-* Processor #4: 4.88%
+* System Average: *4.19%*
+* Processor #1: *6.50%*
+* Processor #2: *2.44%*
+* Processor #3: *2.97%*
+* Processor #4: *4.88%*
 
 Receving notifications from the health.js Event service
 -------------------------------------------------------
@@ -179,19 +179,19 @@ Example Notification:
 
 Explanation of parameters:
 
-* COMMAND
-  This will always be "put cpu".
+*   *COMMAND*
+    This will always be "put cpu".
 
-* ELAPSED_TIME
-  This will be the amount of time that CPU usage was calculated over
-  to calculate CPU_AVERAGE
+*   *ELAPSED_TIME*
+    This will be the amount of time that CPU usage was calculated over
+    to calculate CPU_AVERAGE
 
-* CPU_AVERAGE
-  This is the average CPU average load over the period of time defined by
-  ELAPSED_TIME.
+*   *CPU_AVERAGE*
+    This is the average CPU average load over the period of time defined by
+    ELAPSED_TIME.
 
-* CPU_USAGE
-  For information on the CPU_USAGE string, see the "CPU_USAGE" section above.
+*   *CPU_USAGE*
+    For information on the CPU_USAGE string, see the "CPU_USAGE" section above.
 
 Here are some examples of setting up notification recievers via
 common UNIX utilities:
@@ -219,6 +219,4 @@ via an SSH tunnel.
 
 If you don't know what any of this means, you probably should not be using
 this utility.
-
-
 
