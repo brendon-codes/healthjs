@@ -75,22 +75,27 @@ Examples:
 Explanation of options
 
 *   *--remote-host IP*
+
     This is the remote IP address to notify when CPU hits a certain threshold.
 
 *   *--remote-port PORT*
+
     This is the port of the remote host to notify when CPU hits a certain
     threshold.
 
 *   *--threshold-cpu NUMBER*
+
     This is the number that average CPU usage needs to hit to trigger
     an event notification to remote host. The default for this is 80 (80%).
 
 *   *--cycle-time NUMBER*
+
     This is the amount of milliseconds that the server should wait
     before calculating a new CPU check. Lower numbers have a higher
     performance overhead. The default is 6000 (6 seconds).
 
 *   *--threshold-cycles NUMBER*
+
     This is the number of CPU checks that will be used to calculate CPU average.
     The time interval of one single CPU check is determined by "--cycle-time".
     A lower number will yield more volatile results at a quicker pace.
@@ -101,6 +106,7 @@ Explanation of options
     usage was 60%. The default for this is 10.
 
 *   *--resend-wait NUMBER*
+
     This is the amount of time in minutes that health.js should wait before sending
     another notification to remote server. The default for this is 360 (6 hours).
 
@@ -127,9 +133,11 @@ on all interfaces specify "0.0.0.0" as the listening IP. Once connected, the
 client may send one of two messages:
 
 *   *get cpu once*
+
     This will grab one cpu update an exit
 
 *   *get cpu loop*
+
     This will indefinitely grab cpu updates until client disconnects
 
 Here are some examples of connecting via common UNIX utilities:
@@ -183,17 +191,21 @@ Example Notification:
 Explanation of parameters:
 
 *   *COMMAND*
+
     This will always be "put cpu".
 
 *   *ELAPSED_TIME*
+
     This will be the amount of time that CPU usage was calculated over
     to calculate CPU_AVERAGE
 
 *   *CPU_AVERAGE*
+
     This is the average CPU average load over the period of time defined by
     ELAPSED_TIME.
 
 *   *CPU_USAGE*
+
     For information on the CPU_USAGE string, see the "CPU_USAGE" section above.
 
 Here are some examples of setting up notification recievers via
