@@ -41,18 +41,18 @@ Examples:
 Explanation of options:
 
 * --listen IP
-    This is the IP address that the streaming server should listen on.
-    If this option is not provided, the streaming server will not be
-    enabled.
+  This is the IP address that the streaming server should listen on.
+  If this option is not provided, the streaming server will not be
+  enabled.
 
 * --port PORT
-    This is the port number that the streaming server should listen on.
-    The default is 37778.
+  This is the port number that the streaming server should listen on.
+  The default is 37778.
 
 * --cycle-time NUMBER
-    This is the amount of milliseconds that the server should wait
-    before calculating a new CPU check. Lower numbers have a higher
-    performance overhead. The default is 6000 (6 seconds).
+  This is the amount of milliseconds that the server should wait
+  before calculating a new CPU check. Lower numbers have a higher
+  performance overhead. The default is 6000 (6 seconds).
 
 Running in Event Mode
 ---------------------
@@ -72,34 +72,34 @@ Examples:
 Explanation of options
 
 * --remote-host IP
-    This is the remote IP address to notify when CPU hits a certain threshold.
+  This is the remote IP address to notify when CPU hits a certain threshold.
 
 * --remote-port PORT
-    This is the port of the remote host to notify when CPU hits a certain
-    threshold.
+  This is the port of the remote host to notify when CPU hits a certain
+  threshold.
 
 * --threshold-cpu NUMBER
-    This is the number that average CPU usage needs to hit to trigger
-    an event notification to remote host. The default for this is 80 (80%).
+  This is the number that average CPU usage needs to hit to trigger
+  an event notification to remote host. The default for this is 80 (80%).
 
 * --cycle-time NUMBER
-    This is the amount of milliseconds that the server should wait
-    before calculating a new CPU check. Lower numbers have a higher
-    performance overhead. The default is 6000 (6 seconds).
+  This is the amount of milliseconds that the server should wait
+  before calculating a new CPU check. Lower numbers have a higher
+  performance overhead. The default is 6000 (6 seconds).
 
 * --threshold-cycles NUMBER
-    This is the number of CPU checks that will be used to calculate CPU average.
-    The time interval of one single CPU check is determined by "--cycle-time".
-    A lower number will yield more volatile results at a quicker pace.
-    A higher number will yield more precise results at a slower pace.
-    For example, if "--cycle-time" is set to "4000", and "--threshold-cycles" is
-    set to 20, and "--threshold-cpu" is set to "60", this would mean that a
-    notification would be sent if over a period of 80 seconds, the average CPU
-    usage was 60%. The default for this is 10.
+  This is the number of CPU checks that will be used to calculate CPU average.
+  The time interval of one single CPU check is determined by "--cycle-time".
+  A lower number will yield more volatile results at a quicker pace.
+  A higher number will yield more precise results at a slower pace.
+  For example, if "--cycle-time" is set to "4000", and "--threshold-cycles" is
+  set to 20, and "--threshold-cpu" is set to "60", this would mean that a
+  notification would be sent if over a period of 80 seconds, the average CPU
+  usage was 60%. The default for this is 10.
 
 * --resend-wait NUMBER
-    This is the amount of time in minutes that health.js should wait before sending
-    another notification to remote server. The default for this is 360 (6 hours).
+  This is the amount of time in minutes that health.js should wait before sending
+  another notification to remote server. The default for this is 360 (6 hours).
 
 Running in Event and Streaming Mode Simultaneously
 --------------------------------------------------
@@ -108,10 +108,10 @@ Both modes can be used at the same time.
 
 Examples:
 
-  $ node health.js --listen 127.0.0.1 --port 37778 \
-  >      --remote-host 192.168.1.2 --remote-port 37779 \
-  >      --threshold-cpu 60 --threshold-cycles 20 \
-  >      --resend-wait 30 --cycle-time 4000
+    $ node health.js --listen 127.0.0.1 --port 37778 \
+    >     --remote-host 192.168.1.2 --remote-port 37779 \
+    >     --threshold-cpu 60 --threshold-cycles 20 \
+    >     --resend-wait 30 --cycle-time 4000
 
 Connecting with Client to Health.js Streaming Service
 -----------------------------------------------------
