@@ -9,10 +9,9 @@ OSX and BSD are not supported.
 
 Another fun project sponsored by [Last.VC](http://last.vc/)
 
-*Author: [Brendon Crawford](mailto:brendon@last.vc) *
-*Some concepts taken from http://colby.id.au/node/39/ *
-*See http://colby.id.au/node/39/ *
-*See https://github.com/last/healthjs  *
+* *Author: [Brendon Crawford](mailto:brendon@last.vc)*
+* *See: [Calculating CPU Usage from /proc/stat](http://colby.id.au/node/39/)*
+* *Homepage: [Health.js](https://github.com/last/healthjs)*
 
 Basic Usage
 -----------
